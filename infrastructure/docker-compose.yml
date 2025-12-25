@@ -7,7 +7,7 @@ services:
     image: postgres:15-alpine
     container_name: omnimap-postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-omnimap}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-omnimap_secret}
@@ -221,7 +221,7 @@ services:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       # CORS
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost:8080
     depends_on:
       postgres:
         condition: service_healthy
