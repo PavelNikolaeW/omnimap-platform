@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: omnimap
+  labels:
+    app.kubernetes.io/name: omnimap
+    app.kubernetes.io/part-of: omnimap-platform

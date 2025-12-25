@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: omnimap-ingress
+  namespace: omnimap
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # WebSocket support for sync service
+    nginx.ingress.kubernetes.io/websocket-services: "omnimap-sync"
+spec:
+  ingressClassName: nginx
+  rules:
+    # Main frontend
+    - host: omnimap.cloud.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omnimap-front
+                port:
+                  number: 3000
+
+    # Backend API
+    - host: api.omnimap.cloud.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omnimap-back
+                port:
+                  number: 8000
+
+    # Sync WebSocket
+    - host: sync.omnimap.cloud.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omnimap-sync
+                port:
+                  number: 7999
+
+    # LLM Gateway
+    - host: llm.omnimap.cloud.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: llm-gateway
+                port:
+                  number: 8000

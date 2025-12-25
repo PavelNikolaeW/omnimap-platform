@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omnimap-config
+  namespace: omnimap
+data:
+  # Service URLs (internal)
+  OMNIMAP_BACK_URL: "http://omnimap-back:8000"
+  OMNIMAP_SYNC_URL: "http://omnimap-sync:7999"
+  LLM_GATEWAY_URL: "http://llm-gateway:8000"
+
+  # Database
+  SQL_HOST: "postgres"
+  SQL_PORT: "5432"
+  SQL_NAME: "omnimap"
+
+  # Redis
+  REDIS_URL: "redis://redis:6379/0"
+
+  # RabbitMQ
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+
+  # Auth
+  AUTH_SERVICE_URL: "http://omnimap-back:8000/api/v1/token/verify/"
+
+  # CORS
+  CORS_ORIGINS: "https://omnimap.cloud.ru"

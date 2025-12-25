@@ -1,0 +1,12 @@
+[submodule "services/omnimap-back"]
+	path = services/omnimap-back
+	url = git@github.com:PavelNikolaeW/omnimap-back.git
+[submodule "services/omnimap-front"]
+	path = services/omnimap-front
+	url = git@github.com:PavelNikolaeW/omnimap-front.git
+[submodule "services/omnimap-sync"]
+	path = services/omnimap-sync
+	url = git@github.com:PavelNikolaeW/omnimap-sync.git
+[submodule "services/llm-gateway"]
+	path = services/llm-gateway
+	url = git@github.com:PavelNikolaeW/llm_gateway.git

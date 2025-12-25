@@ -1,0 +1,214 @@
+version: "3.9"
+
+services:
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: omnimap-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-omnimap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-omnimap_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-omnimap}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-omnimap}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: omnimap-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: omnimap-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-omnimap}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-omnimap_secret}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  # =============================================================================
+  # Application Services
+  # =============================================================================
+
+  omnimap-back:
+    build:
+      context: ../services/omnimap-back
+      dockerfile: Dockerfile
+    container_name: omnimap-back
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-omnimap}:${POSTGRES_PASSWORD:-omnimap_secret}@postgres:5432/${POSTGRES_DB:-omnimap}
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-omnimap}:${RABBITMQ_PASSWORD:-omnimap_secret}@rabbitmq:5672/
+      - SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - LLM_GATEWAY_URL=http://llm-gateway:8001
+    volumes:
+      - static_volume:/usr/src/app/static
+      - media_volume:/usr/src/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  omnimap-celery:
+    build:
+      context: ../services/omnimap-back
+      dockerfile: Dockerfile
+    container_name: omnimap-celery
+    command: celery -A config worker -l info
+    environment:
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-omnimap}:${POSTGRES_PASSWORD:-omnimap_secret}@postgres:5432/${POSTGRES_DB:-omnimap}
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-omnimap}:${RABBITMQ_PASSWORD:-omnimap_secret}@rabbitmq:5672/
+      - SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+    depends_on:
+      - omnimap-back
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  omnimap-front:
+    build:
+      context: ../services/omnimap-front
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: omnimap-front
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_WS_URL=ws://localhost:7999
+      - REACT_APP_LLM_URL=http://localhost:8001
+    depends_on:
+      - omnimap-back
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  omnimap-sync:
+    build:
+      context: ../services/omnimap-sync
+      dockerfile: Dockerfile
+    container_name: omnimap-sync
+    ports:
+      - "7999:7999"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=7999
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-omnimap}:${RABBITMQ_PASSWORD:-omnimap_secret}@rabbitmq:5672/
+      - AUTH_SERVICE_URL=http://omnimap-back:8000/api/v1/token/verify/
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+  llm-gateway:
+    build:
+      context: ../services/llm-gateway
+      dockerfile: Dockerfile
+      target: production
+    container_name: omnimap-llm-gateway
+    ports:
+      - "8001:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Database
+      - SQL_HOST=postgres
+      - SQL_PORT=5432
+      - SQL_USER=${POSTGRES_USER:-omnimap}
+      - SQL_PASSWD=${POSTGRES_PASSWORD:-omnimap_secret}
+      - SQL_NAME=llm_gateway
+      # Redis
+      - REDIS_URL=redis://redis:6379/1
+      # Auth
+      - AUTH_VERIFY_URL=http://omnimap-back:8000/api/v1/token/verify/
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      # LLM Providers
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # CORS
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - omnimap-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  static_volume:
+  media_volume:
+
+networks:
+  omnimap-network:
+    driver: bridge
