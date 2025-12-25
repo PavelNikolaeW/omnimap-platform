@@ -47,43 +47,43 @@ submodules:
 COMPOSE_FILE = infrastructure/docker-compose.yml
 
 up:
-	docker-compose -f $(COMPOSE_FILE) up -d
+	docker compose -f $(COMPOSE_FILE) up -d
 
 down:
-	docker-compose -f $(COMPOSE_FILE) down
+	docker compose -f $(COMPOSE_FILE) down
 
 build:
-	docker-compose -f $(COMPOSE_FILE) build
+	docker compose -f $(COMPOSE_FILE) build
 
 logs:
-	docker-compose -f $(COMPOSE_FILE) logs -f
+	docker compose -f $(COMPOSE_FILE) logs -f
 
 logs-back:
-	docker-compose -f $(COMPOSE_FILE) logs -f omnimap-back
+	docker compose -f $(COMPOSE_FILE) logs -f omnimap-back
 
 logs-front:
-	docker-compose -f $(COMPOSE_FILE) logs -f omnimap-front
+	docker compose -f $(COMPOSE_FILE) logs -f omnimap-front
 
 logs-sync:
-	docker-compose -f $(COMPOSE_FILE) logs -f omnimap-sync
+	docker compose -f $(COMPOSE_FILE) logs -f omnimap-sync
 
 logs-llm:
-	docker-compose -f $(COMPOSE_FILE) logs -f llm-gateway
+	docker compose -f $(COMPOSE_FILE) logs -f llm-gateway
 
 ps:
-	docker-compose -f $(COMPOSE_FILE) ps
+	docker compose -f $(COMPOSE_FILE) ps
 
 clean:
-	docker-compose -f $(COMPOSE_FILE) down -v --remove-orphans
+	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans
 	docker system prune -f
 
 # Start only infrastructure (postgres, redis, rabbitmq)
 infra:
-	docker-compose -f $(COMPOSE_FILE) up -d postgres redis rabbitmq
+	docker compose -f $(COMPOSE_FILE) up -d postgres redis rabbitmq
 
 # Restart a specific service
 restart-%:
-	docker-compose -f $(COMPOSE_FILE) restart $*
+	docker compose -f $(COMPOSE_FILE) restart $*
 
 # =============================================================================
 # Kubernetes Deployment
@@ -115,15 +115,15 @@ k8s-logs-%:
 
 # Run migrations for omnimap-back
 migrate:
-	docker-compose -f $(COMPOSE_FILE) exec omnimap-back python manage.py migrate
+	docker compose -f $(COMPOSE_FILE) exec omnimap-back python manage.py migrate
 
 # Create superuser
 superuser:
-	docker-compose -f $(COMPOSE_FILE) exec omnimap-back python manage.py createsuperuser
+	docker compose -f $(COMPOSE_FILE) exec omnimap-back python manage.py createsuperuser
 
 # Shell into a service
 shell-back:
-	docker-compose -f $(COMPOSE_FILE) exec omnimap-back /bin/sh
+	docker compose -f $(COMPOSE_FILE) exec omnimap-back /bin/sh
 
 shell-llm:
-	docker-compose -f $(COMPOSE_FILE) exec llm-gateway /bin/sh
+	docker compose -f $(COMPOSE_FILE) exec llm-gateway /bin/sh
