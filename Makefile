@@ -62,8 +62,8 @@ down:
 build:
 	docker compose -f $(COMPOSE_FILE) build
 
-# Rebuild and restart all services
-rebuild:
+# Rebuild and restart all services (with submodule update)
+rebuild: submodules
 	docker compose -f $(COMPOSE_FILE) build --no-cache
 	docker compose -f $(COMPOSE_FILE) up -d
 
