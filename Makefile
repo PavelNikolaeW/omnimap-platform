@@ -1,4 +1,4 @@
-.PHONY: help init submodules up down build logs ps clean deploy-dev deploy-prod
+.PHONY: help init submodules up down build rebuild logs ps clean deploy-dev deploy-prod backup restore
 
 # Default target
 help:
@@ -12,13 +12,20 @@ help:
 	@echo "    make up            - Start all services"
 	@echo "    make down          - Stop all services"
 	@echo "    make build         - Build all images"
+	@echo "    make rebuild       - Rebuild all images and restart"
+	@echo "    make rebuild-back  - Rebuild and restart omnimap-back"
 	@echo "    make logs          - View logs (all services)"
 	@echo "    make logs-back     - View omnimap-back logs"
 	@echo "    make logs-front    - View omnimap-front logs"
 	@echo "    make logs-sync     - View omnimap-sync logs"
+	@echo "    make logs-celery   - View celery logs"
 	@echo "    make logs-llm      - View llm-gateway logs"
 	@echo "    make ps            - Show running containers"
-	@echo "    make clean         - Remove containers and volumes"
+	@echo "    make clean         - Remove containers and volumes (DELETES DATA!)"
+	@echo ""
+	@echo "  Backup & Restore:"
+	@echo "    make backup        - Create backup of all data"
+	@echo "    make restore       - Restore from backup"
 	@echo ""
 	@echo "  Kubernetes Deployment:"
 	@echo "    make deploy-dev    - Deploy to dev environment"
@@ -55,6 +62,16 @@ down:
 build:
 	docker compose -f $(COMPOSE_FILE) build
 
+# Rebuild and restart all services
+rebuild:
+	docker compose -f $(COMPOSE_FILE) build --no-cache
+	docker compose -f $(COMPOSE_FILE) up -d
+
+# Rebuild specific service: make rebuild-back, rebuild-llm, etc.
+rebuild-%:
+	docker compose -f $(COMPOSE_FILE) build --no-cache $*
+	docker compose -f $(COMPOSE_FILE) up -d $*
+
 logs:
 	docker compose -f $(COMPOSE_FILE) logs -f
 
@@ -67,6 +84,9 @@ logs-front:
 logs-sync:
 	docker compose -f $(COMPOSE_FILE) logs -f omnimap-sync
 
+logs-celery:
+	docker compose -f $(COMPOSE_FILE) logs -f omnimap-celery
+
 logs-llm:
 	docker compose -f $(COMPOSE_FILE) logs -f llm-gateway
 
@@ -74,6 +94,9 @@ ps:
 	docker compose -f $(COMPOSE_FILE) ps
 
 clean:
+	@echo "WARNING: This will DELETE all data (PostgreSQL, Redis, RabbitMQ)!"
+	@read -p "Create backup first? [Y/n] " backup && [ "$$backup" != "n" ] && $(MAKE) backup || true
+	@read -p "Are you sure you want to delete all data? [yes/N] " confirm && [ "$$confirm" = "yes" ]
 	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans
 	docker system prune -f
 
@@ -127,3 +150,20 @@ shell-back:
 
 shell-llm:
 	docker compose -f $(COMPOSE_FILE) exec llm-gateway /bin/sh
+
+# =============================================================================
+# Backup & Restore
+# =============================================================================
+
+BACKUP_DIR = ./backups
+
+backup:
+	@mkdir -p $(BACKUP_DIR)
+	BACKUP_DIR=$(BACKUP_DIR) ./scripts/backup.sh
+
+restore:
+	@./scripts/restore.sh $(filter-out $@,$(MAKECMDGOALS))
+
+# Allow passing backup filename as argument
+%:
+	@:

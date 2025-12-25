@@ -41,3 +41,6 @@ deploy/kubernetes/overlays/*/secrets/
 *.tfstate
 *.tfstate.*
 .terraform/
+
+# Backups (contain sensitive data)
+backups/
