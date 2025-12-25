@@ -10,7 +10,7 @@
 omnimap-platform/
 ├── services/                    # Git submodules с микросервисами
 │   ├── omnimap-back/           # Django REST API + Celery
-│   ├── omnimap-front/          # React фронтенд
+│   ├── omnimap-front/          # Фронтенд
 │   ├── omnimap-sync/           # WebSocket синхронизация
 │   └── llm-gateway/            # FastAPI для LLM
 ├── infrastructure/             # Docker Compose для локальной разработки
@@ -28,12 +28,12 @@ omnimap-platform/
 
 ## Сервисы
 
-| Сервис | Порт | Технология | Описание |
-|--------|------|------------|----------|
-| omnimap-back | 8000 | Django + Celery | REST API для фронтенда, аутентификация |
-| omnimap-front | 3000 | React | Пользовательский интерфейс |
+| Сервис | Порт | Технология       | Описание |
+|--------|------|------------------|----------|
+| omnimap-back | 8000 | Django + Celery  | REST API для фронтенда, аутентификация |
+| omnimap-front | 3000 | vanila js        | Пользовательский интерфейс |
 | omnimap-sync | 7999 | Python/WebSocket | Синхронизация данных между пользователями |
-| llm-gateway | 8001 | FastAPI | API Gateway для LLM провайдеров |
+| llm-gateway | 8001 | FastAPI          | API Gateway для LLM провайдеров |
 
 ## Репозитории
 
@@ -45,7 +45,7 @@ omnimap-platform/
 ## Технологии
 
 - **Backend**: Python 3.11+, Django, FastAPI, Celery
-- **Frontend**: React, TypeScript
+- **Frontend**: vanila js
 - **Database**: PostgreSQL 15
 - **Cache/Queue**: Redis 7, RabbitMQ 3.12
 - **Containers**: Docker Compose (local), Kubernetes (prod)
