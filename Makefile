@@ -46,6 +46,9 @@ init: submodules
 submodules:
 	@echo "Initializing submodules..."
 	git submodule update --init --recursive
+	@echo "Checking out main branch in all submodules..."
+	git submodule foreach 'git checkout main 2>/dev/null || git checkout master 2>/dev/null || true'
+	git submodule foreach 'git pull origin $$(git rev-parse --abbrev-ref HEAD) 2>/dev/null || true'
 	@echo "Submodules updated."
 
 # =============================================================================
