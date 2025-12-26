@@ -14,6 +14,7 @@ help:
 	@echo "    make build         - Build all images"
 	@echo "    make rebuild       - Rebuild all images and restart"
 	@echo "    make rebuild-back  - Rebuild and restart omnimap-back"
+	@echo "    make restart-front-clean - Restart frontend with clean node_modules"
 	@echo "    make logs          - View logs (all services)"
 	@echo "    make logs-back     - View omnimap-back logs"
 	@echo "    make logs-front    - View omnimap-front logs"
@@ -68,7 +69,7 @@ rebuild: submodules
 	docker compose -f $(COMPOSE_FILE) up -d
 
 # Rebuild specific service: make rebuild-back, rebuild-llm, etc.
-rebuild-%:
+rebuild-%: submodules
 	docker compose -f $(COMPOSE_FILE) build --no-cache $*
 	docker compose -f $(COMPOSE_FILE) up -d $*
 
@@ -107,6 +108,12 @@ infra:
 # Restart a specific service
 restart-%:
 	docker compose -f $(COMPOSE_FILE) restart $*
+
+# Restart frontend with clean node_modules (for dev with volume mounts)
+restart-front-clean: submodules
+	docker compose -f $(COMPOSE_FILE) stop omnimap-front
+	docker volume rm infrastructure_omnimap_front_node_modules 2>/dev/null || true
+	docker compose -f $(COMPOSE_FILE) up -d omnimap-front
 
 # =============================================================================
 # Kubernetes Deployment

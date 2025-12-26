@@ -215,11 +215,13 @@ services:
       # Auth
       - AUTH_VERIFY_URL=http://omnimap-back:8000/api/v1/token/verify/
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
-      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - JWT_SECRET=${DJANGO_SECRET_KEY:-change-me-in-production}
       # LLM Providers
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GIGACHAT_AUTH_KEY=${GIGACHAT_AUTH_KEY:-}
+      - GIGACHAT_SCOPE=${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
       # CORS
       - CORS_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost:8080
     depends_on:

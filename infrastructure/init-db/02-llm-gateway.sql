@@ -66,10 +66,17 @@ CREATE INDEX IF NOT EXISTS idx_models_provider ON models(provider);
 -- Insert default models
 INSERT INTO models (name, provider, cost_per_1k_prompt_tokens, cost_per_1k_completion_tokens, context_window, enabled)
 VALUES
+    -- Anthropic
     ('claude-3-5-sonnet-20241022', 'anthropic', 0.003, 0.015, 200000, true),
     ('claude-3-5-haiku-20241022', 'anthropic', 0.0008, 0.004, 200000, true),
+    -- OpenAI
     ('gpt-4o', 'openai', 0.005, 0.015, 128000, true),
-    ('gpt-4o-mini', 'openai', 0.00015, 0.0006, 128000, true)
+    ('gpt-4o-mini', 'openai', 0.00015, 0.0006, 128000, true),
+    -- GigaChat (Sber) - цены в рублях конвертированы в USD (~0.01 USD = 1 RUB)
+    -- Пакет 10M токенов за 400 руб = 0.00004 руб/токен = 0.04 руб/1k = ~0.0004 USD/1k
+    ('GigaChat', 'gigachat', 0.0004, 0.0004, 32000, true),
+    ('GigaChat-Pro', 'gigachat', 0.0008, 0.0008, 32000, true),
+    ('GigaChat-Max', 'gigachat', 0.0016, 0.0016, 128000, true)
 ON CONFLICT (name) DO NOTHING;
 
 -- Audit logs table
