@@ -23,6 +23,7 @@ data:
 
   # Auth
   AUTH_SERVICE_URL: "http://omnimap-back:8000/api/v1/token/verify/"
+  BACKEND_AUTH_URL: "http://omnimap-back:8000/api/v1/login/"
 
   # CORS
   CORS_ORIGINS: "https://omnimap.cloud.ru"

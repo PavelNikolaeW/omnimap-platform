@@ -30,3 +30,4 @@ configMapGenerator:
       - DEBUG=false
       - LOG_LEVEL=INFO
       - ENVIRONMENT=production
+      - BACKEND_AUTH_URL=https://api.omnimap.cloud.ru/api/v1/login/

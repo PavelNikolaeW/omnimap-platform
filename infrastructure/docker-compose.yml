@@ -224,6 +224,8 @@ services:
       - GIGACHAT_SCOPE=${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
       # CORS
       - CORS_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost:8080
+      # Admin Panel
+      - BACKEND_AUTH_URL=http://omnimap-back:8000/api/v1/login/
     depends_on:
       postgres:
         condition: service_healthy
