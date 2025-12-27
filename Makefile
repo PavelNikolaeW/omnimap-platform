@@ -25,8 +25,8 @@ help:
 	@echo "    make clean         - Remove containers and volumes (DELETES DATA!)"
 	@echo ""
 	@echo "  Backup & Restore:"
-	@echo "    make backup        - Create backup of all data"
-	@echo "    make restore       - Restore from backup"
+	@echo "    make backup                     - Create backup of all data"
+	@echo "    make restore <file.tar.gz>      - Restore from backup"
 	@echo ""
 	@echo "  Kubernetes Deployment:"
 	@echo "    make deploy-dev    - Deploy to dev environment"
@@ -60,7 +60,7 @@ COMPOSE_FILE = infrastructure/docker-compose.yml
 up:
 	docker compose -f $(COMPOSE_FILE) up -d
 
-down:
+down: backup
 	docker compose -f $(COMPOSE_FILE) down
 
 build:
@@ -172,7 +172,7 @@ backup:
 	BACKUP_DIR=$(BACKUP_DIR) ./scripts/backup.sh
 
 restore:
-	@./scripts/restore.sh $(filter-out $@,$(MAKECMDGOALS))
+	@./scripts/restore.sh -y $(filter-out $@,$(MAKECMDGOALS))
 
 # Allow passing backup filename as argument
 %:
