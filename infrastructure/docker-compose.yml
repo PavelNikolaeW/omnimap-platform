@@ -99,6 +99,13 @@ services:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - JWT_SECRET=${JWT_SECRET}
       - LLM_GATEWAY_URL=http://llm-gateway:8001
+      # File Storage
+      - FILE_STORAGE_BACKEND=${FILE_STORAGE_BACKEND:-local}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME:-}
+      - AWS_S3_ENDPOINT_URL=${AWS_S3_ENDPOINT_URL:-}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME:-ru-central1}
     volumes:
       - ./scripts/entrypoint-back.sh:/entrypoint.sh:ro
       - static_volume:/block_api/static

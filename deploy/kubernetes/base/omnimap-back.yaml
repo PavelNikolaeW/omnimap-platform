@@ -25,6 +25,9 @@ spec:
                 name: omnimap-config
             - secretRef:
                 name: omnimap-secrets
+          env:
+            - name: FILE_STORAGE_BACKEND
+              value: "s3"
           resources:
             requests:
               memory: "256Mi"
